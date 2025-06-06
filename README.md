@@ -7,6 +7,7 @@
 <p align="center">
 <b>⚡ Everything you need to create an LLM Agent is here. Access a comprehensive suite of tools, prompts, frameworks, and a knowledge hub of LLM models—all in one place to streamline your agent development.</b>
 </p>
+
 <p align="center">
 <a href="https://pepy.tech/project/demogpt"><img src="https://static.pepy.tech/badge/demogpt" alt="Downloads"></a>
 <a href="https://github.com/melih-unsal/DemoGPT/releases"><img src="https://img.shields.io/github/release/melih-unsal/DemoGPT" alt="Releases"></a>
@@ -40,15 +41,452 @@
 <a href="https://huggingface.co/spaces/melihunsal/demogpt"><img src="https://img.shields.io/badge/%F0%9F%A4%97-Spaces-yellow"></a>
 </p>
 
-## ⭐ Star History
+## 📑 Table of Contents
 
-[![Star History Chart](https://api.star-history.com/svg?repos=melih-unsal/DemoGPT&type=Timeline)](https://star-history.com/#melih-unsal/DemoGPT&Timeline)
+- [Introduction](#-introduction)
+- [Architecture](#️-architecture)
+- [Installation](#-installation)
+- [Usage](#-usage)
+  - [Package Version](#-for-the-package-version)
+  - [Python Interface](#-for-the-python-interface)
+  - [Source Code Version](#-for-the-source-code-version)
+- [DemoGPT AgentHub](#-demogpt-agenthub)
+  - [Installation](#-installation-1)
+  - [Creating Tools](#-creating-tools)
+  - [Available Tools](#-available-tools)
+  - [Creating an Agent](#-creating-an-agent)
+  - [Using an Agent](#-using-an-agent)
+  - [Available Agent Types](#-available-agent-types)
+  - [Using ReactAgent](#-using-reactagent)
+  - [Using RAG](#-using-rag)
+  - [Combining RAG with Agents](#-combining-rag-with-agents)
+- [To-Do](#to-do-)
+- [Contribute](#-contribute)
+- [Citations](#-citations)
+- [License](#-license)
 
-⭐ Consider starring us if you're using DemoGPT so more people hear about us!
+## 🤖 DemoGPT AgentHub
+
+DemoGPT AgentHub is a powerful library that allows you to create, customize, and use AI agents with various tools.
+
+### 🛠 Installation
+
+To use DemoGPT AgentHub, simply install the main package:
+
+```bash 
+pip install demogpt
+```
+
+### 🔧 Creating Tools
+
+Creating custom tools is easy:
+
+```python
+from demogpt_agenthub.tools import BaseTool
+class MyCustomTool(BaseTool):
+    def __init__(self):
+        self.name = "MyCustomTool"
+        self.description = "This tool does something amazing!"
+        super().__init__()
+    def run(self, query):
+        # Implement your tool's functionality here
+        return f"Result for: {query}"
+```
+
+**Example Usage:**
+```python
+my_tool = MyCustomTool()
+agent = ToolCallingAgent(tools=[my_tool], llm=llm, verbose=True)
+agent.run("Can you use my custom tool?")
+```
+
+**Example Output:**
+```
+Reasoning:
+The user is asking to use the custom tool called MyCustomTool. This tool is described as doing "something amazing", so I will use it to process the query.
+Tool call:
+MyCustomTool
+Tool result:
+Result for: Can you use my custom tool?
+Answer:
+Yes, I successfully used your custom tool! The tool processed your query and returned the following result: "Result for: Can you use my custom tool?"
+```
+
+### 🧰 Available Tools
+
+DemoGPT AgentHub comes with several built-in tools:
+
+- 🔍 DuckDuckGoSearchTool
+- 🌦 WeatherTool
+- 📚 WikipediaTool
+- 🐚 BashTool
+- 🐍 PythonTool
+- 📄 ArxivTool
+- 🎥 YouTubeSearchTool
+- 💻 StackOverFlowTool
+- 🌐 RequestUrlTool
+- 🗃 WikiDataTool
+- 🏥 PubmedTool
+
+### 🤖 Creating an Agent
+
+To create an agent:
+
+```python
+from demogpt_agenthub.agents import ToolCallingAgent
+from demogpt_agenthub.llms import OpenAIChatModel
+from demogpt_agenthub.tools import DuckDuckGoSearchTool, WeatherTool
+
+search_tool = DuckDuckGoSearchTool()
+weather_tool = WeatherTool()
+llm = OpenAIChatModel(model_name="gpt-4o-mini")
+agent = ToolCallingAgent(tools=[search_tool, weather_tool], llm=llm, verbose=True)
+```
+
+### 🎮 Using an Agent
+
+Once you've created an agent, use it to ask questions or perform tasks:
+
+```python
+query = "What's the weather like in New York today?"
+response = agent.run(query)
+print(response)
+```
+
+**Example Output:**
+
+```
+Removing existing vectorstore at rag_chroma
+Decision:
+False
+Reasoning:
+To find the weather in New York today, I first need to retrieve the current weather information. After obtaining the weather information, I can provide you with the current weather conditions. The RAG tool will help me find out the current weather in New York.
+Tool call:
+RAG
+Tool args:
+{'query': 'weather in New York today'}
+Tool result:
+In New York, the current weather is as follows:
+Detailed status: clear sky
+Wind speed: 2.57 m/s, direction: 240°
+Humidity: 56%
+Temperature: 
+  - Current: 24.36°C
+  - High: 25.74°C
+  - Low: 22.05°C
+  - Feels like: 24.46°C
+Rain: {}
+Heat index: None
+Cloud cover: 0%
+Answer:
+The current weather in New York is clear sky with a temperature of 24.36°C (feels like 24.46°C). The humidity is at 56% with a wind speed of 2.57 m/s from the direction of 240°. There is 0% cloud cover.
+```
+
+This example demonstrates how an agent can:
+1. Access document information through RAG
+2. Use Python for calculations
+3. Combine multiple tools to answer complex questions
+
+The agent will:
+1. Use RAG to find information about the current weather in New York
+2. Use the Python tool to calculate the current weather conditions
+3. Provide a comprehensive answer using both pieces of information
+
+### 🧰 Example: Creating a Simple Math Tool
+
+Here's an example of creating a custom power calculation tool:
+
+```python
+from demogpt_agenthub.tools import BaseTool
+class MyPowerTool(BaseTool):
+    def __init__(self):
+        self.name = "MyPowerTool"
+        self.description = "This tool is used to calculate the power of a number"
+        super().__init__()
+    def run(self, a: int, b: int):
+        # Implement your tool's functionality here
+        return a**b
+
+power_tool = MyPowerTool()
+agent = ToolCallingAgent(tools=[search_tool, weather_tool, power_tool], llm=llm, verbose=True)
+agent.run("What is the 34 to the power of 26?")
+```
+
+**Example Output:**
+```
+Reasoning:
+The task is to calculate a number raised to the power of another. The most appropriate tool for this calculation is MyPowerTool, which is specifically designed for power calculations.
+Tool call:
+MyPowerTool
+Tool result:
+6583424253569334549714045134721532297216
+Answer:
+34 to the power of 26 is 6583424253569334549714045134721532297216.
+```
+
+### 🧠 Using ReactAgent
+
+The ReactAgent provides a detailed reasoning process:
+
+#### Example 1: Weather and Math Calculations
+
+```python
+from demogpt_agenthub.tools import DuckDuckGoSearchTool, WeatherTool, PythonTool
+from demogpt_agenthub.llms import OpenAIChatModel
+from demogpt_agenthub.agents import ReactAgent
+
+search_tool = DuckDuckGoSearchTool()
+weather_tool = WeatherTool()
+python_tool = PythonTool()
+
+agent = ReactAgent(
+    tools=[search_tool, weather_tool, python_tool],
+    llm=OpenAIChatModel(model_name="gpt-4o-mini"),
+    verbose=True
+)
+
+query = "What is the weather's temperature's square root in the country where Cristiano Ronaldo is currently playing?"
+print(agent.run(query))
+```
+
+**Example Output:**
+```
+Decision:
+False
+Reasoning:
+First, I need to determine the current location where Christiano Ronaldo is playing in order to fetch the current temperature. Then I will use the OpenWeatherMap tool to get the temperature information. Finally, I will calculate the square root of the temperature using the Python Interpreter tool for precise computation.
+Tool call:
+duckduckgo_search
+Tool args:
+{'inp': 'Where is Christiano Ronaldo currently playing?'}
+Tool result:
+Ronaldo started Al Nassr's home match against Saudi Pro League leaders Al Ittihad on May 7. Stefano Pioli's men went into a 2-0 first-half lead but were beaten 3-2 when Houssem Aouar stuck in ... Cristiano Ronaldo and his Al Nassr team endured disappointment in 2023/24 as they failed to win the Saudi Pro League or the AFC Champions League. After Sadio Mane, Seko Fofana, Marcelo Brozovic ... Yes, Cristiano Ronaldo will be in the lineup to play tonight. Now that they once again failed to win the AFC Champions League Elite, Ronaldo will still have some optimism that they can win the league despite being eight points behind Al Ittihad. Despite the club's poor season, Ronaldo has maintained his goalscoring form, netting 23 goals in ... Cristiano Ronaldo currently plays for Al Nassr in the Saudi Pro League. The Portugal international transferred from Manchester United in December 2022 and inked a two-and-a-half-year contract with ... Is Cristiano Ronaldo playing Today? Cristiano Ronaldo is expected to start in today's crucial match. The Portuguese star remains Al Nassr's top scorer in the AFC Champions League, with six goals to his name. His outstanding form has played a pivotal role in the team's journey to the semifinals—now just one win away from reaching a continental final for the first time since 1995, when ...
+Decision:
+False
+Reasoning:
+I need to fetch the current temperature in Saudi Arabia where Cristiano Ronaldo is playing, using the OpenWeatherMap tool. After obtaining the temperature, I will compute its square root using the Python Interpreter tool.
+Tool call:
+open_weather_map
+Tool args:
+{'city': 'Riyadh,SA'}
+Tool result:
+In Riyadh,SA, the current weather is as follows:
+Detailed status: clear sky
+Wind speed: 5.44 m/s, direction: 150°
+Humidity: 7%
+Temperature:
+Current: 39.16°C
+High: 39.16°C
+Low: 39.16°C
+Feels like: 35.82°C
+Rain: {}
+Heat index: None
+Cloud cover: 0%
+Decision:
+False
+Reasoning:
+I need to calculate the square root of the current temperature in Saudi Arabia, which is 39.16°C. I will use the Python Interpreter tool for precise calculation.
+Tool call:
+Python Interpreter
+Tool args:
+{'code': 'import math\nresult = math.sqrt(39.16)\nprint(result)'}
+Tool result:
+6.257795138864806
+
+Decision:
+True
+Answer:
+The square root of the current temperature in Saudi Arabia, where Cristiano Ronaldo is playing, is approximately 6.26.
+```
+
+#### Example 2: Object Detection in Images
+
+```python
+from demogpt_agenthub.tools import YoloTool
+from demogpt_agenthub.llms import OpenAIChatModel
+from demogpt_agenthub.agents import ReactAgent
+
+yolo_tool = YoloTool()
+
+agent = ReactAgent(tools=[yolo_tool], llm=OpenAIChatModel(model_name="gpt-4o-mini"), verbose=True)
+query = "Give me the objects in the image https://ultralytics.com/images/bus.jpg"
+print(agent.run(query))
+```
+
+**Example Output:**
+```
+Decision:
+False
+Reasoning:
+The task is to identify and list the objects present in a given image. The available tool, 'YOLO Object Detection', is specifically designed for this purpose and can analyze the image to output detailed descriptions of detected objects.
+Tool call:
+YOLO Object Detection
+Tool args:
+{'path': 'https://ultralytics.com/images/bus.jpg'}
+
+Found https://ultralytics.com/images/bus.jpg locally at bus.jpg
+image 1/1 /home/melih/Desktop/projects/DemoGPT/bus.jpg: 640x480 4 persons, 1 bus, 59.1ms
+Speed: 2.0ms preprocess, 59.1ms inference, 38.9ms postprocess per image at shape (1, 3, 640, 480)
+Tool result:
+in the image.
+There are 1 bus, 4 person in the image.
+The bus[1] is from (3, 229) to (796, 728).
+The person[1] is from (671, 394) to (809, 878).
+The person[2] is from (47, 399) to (239, 904).
+The person[3] is from (223, 408) to (344, 860).
+The person[4] is from (0, 556) to (68, 872).
+
+Decision:
+True
+Answer:
+In the image you provided, there are the following objects detected:
+
+- 1 bus
+- 4 persons
+
+The bus is located at coordinates from (3, 229) to (796, 728). The persons are located at the following coordinates:
+
+- Person 1: (671, 394) to (809, 878)
+- Person 2: (47, 399) to (239, 904)
+- Person 3: (223, 408) to (344, 860)
+- Person 4: (0, 556) to (68, 872)
+```
+
+These examples demonstrate how ReactAgent can:
+1. Process complex multi-step queries using multiple tools
+2. Perform computer vision tasks with YOLO object detection
+3. Show detailed reasoning and decision-making process
+4. Provide structured and informative responses
+
+### 🧮 Using RAG
+
+BaseRAG provides an easy way to implement Retrieval Augmented Generation with various vector stores:
+
+```python
+from demogpt_agenthub.rag import BaseRAG
+from demogpt_agenthub.llms import OpenAIChatModel
+
+# Initialize RAG system
+rag = BaseRAG(
+    llm=OpenAIChatModel(model_name="gpt-4o-mini"), 
+    vectorstore="chroma",  # Supports "chroma", "pinecone", "faiss"
+    persistent_path="rag_chroma",  # Where to store the vector database
+    index_name="rag_index",
+    reset_vectorstore=True,  # Whether to reset existing vectorstore
+    embedding_model_name="sentence-transformers/all-mpnet-base-v2",  # Or use OpenAI models
+    filter={"search_kwargs": {"score_threshold": 0.5}}
+)
+
+# Add documents
+rag.add_files(["~/Downloads/Resume.pdf"])  # Supports PDF, TXT, CSV, JSON
+
+# Query the RAG system
+response = rag.run("What is the GitHub repo of the person?")
+print(response)
+```
+
+**Example Output:**
+```
+Removing existing vectorstore at rag_chroma
+The GitHub repository of the person is called DemoGPT, and it can be found at https://github.com/melih-unsal.
+```
+
+**Another Query Example:**
+```python
+rag.run("How many stars does the GitHub repo have?")
+```
+
+**Output:**
+```
+The GitHub repo has 1.8K stars.
+```
+
+These examples provide users with a clear understanding of:
+1. What to expect when running these code blocks
+2. The format of the output
+3. How different agents and tools behave
+4. How the reasoning process works in the ReactAgent
+5. How RAG responds to questions
+
+### 🔄 Combining RAG with Agents
+
+You can also use RAG within agents to enable document-based reasoning. Here's an example:
+
+```python
+from demogpt_agenthub.tools import PythonTool
+from demogpt_agenthub.llms import OpenAIChatModel
+from demogpt_agenthub.agents import ReactAgent
+from demogpt_agenthub.rag import BaseRAG
+
+# Initialize RAG system
+rag = BaseRAG(
+    llm=OpenAIChatModel(model_name="gpt-4o-mini"), 
+    vectorstore="chroma", 
+    persistent_path="rag_chroma", 
+    index_name="rag_index",
+    reset_vectorstore=True,
+    embedding_model_name="sentence-transformers/all-mpnet-base-v2",
+    filter={"search_kwargs": {"score_threshold": 0.5}}
+)
+
+# Add your documents
+rag.add_files(["~/Downloads/Melih_ÜNSAL_Resume.pdf"])
+
+# Create an agent with RAG and other tools
+python_tool = PythonTool()
+agent = ReactAgent(
+    tools=[python_tool, rag], 
+    llm=OpenAIChatModel(model_name="gpt-4o-mini"), 
+    verbose=True
+)
+
+# Use the agent with both RAG and other tools
+query = "What is the square root of the number of stars of the github repo of Melih?"
+print(agent.run(query))
+```
+
+**Example Output:**
+```
+Removing existing vectorstore at rag_chroma
+Decision:
+False
+Reasoning:
+To find the square root of the number of stars in Melih's GitHub repo, I first need to retrieve the current number of stars for that repository. After obtaining that number, I can compute its square root. The RAG tool will help me find out the number of stars, and then I'll use the Python Interpreter to calculate the square root.
+Tool call:
+RAG
+Tool args:
+{'query': 'number of stars in the GitHub repository of Melih'}
+Tool result:
+The GitHub repository of Melih ÜNSAL has 1.8K stars.
+Decision:
+False
+Reasoning:
+I need to calculate the square root of 1.8K stars, which is equivalent to 1800 stars. To perform this calculation, I will use the Python Interpreter tool to compute the square root.
+Tool call:
+Python Interpreter
+Tool args:
+{'code': 'import math\nresult = math.sqrt(1800)\nprint(result)'}
+Tool result:
+42.42640687119285
+
+Decision:
+True
+Answer:
+The square root of the number of stars in Melih's GitHub repository, which is 1.8K (or 1800 stars), is approximately 42.43.
+```
+
+This example demonstrates how an agent can:
+1. Access document information through RAG
+2. Use Python for calculations
+3. Combine multiple tools to answer complex questions
+
+The agent will:
+1. Use RAG to find information about the GitHub repository stars
+2. Use the Python tool to calculate the square root
+3. Provide a comprehensive answer using both pieces of information
 
 ## 🔥 Demo
 
-For quick demo, you can visit [our website](https://demogpt.io)
 
 ![Tweet Generator](assets/web_blogger.gif)
 
@@ -73,17 +511,6 @@ To use the DemoGPT application, simply type "demogpt" into your terminal:
 demogpt
 ```
 
-
-## 📑 Table of Contents
-
-- [Introduction](#-introduction)
-- [Architecture](#%EF%B8%8F-architecture)
-- [Installation](#-installation)
-- [Usage](#-usage)
-- [To-Do](#to-do-)
-- [Contribute](#-contribute)
-- [Citations](#-citations) 
-- [License](#-license)
 
 ## 📌 Introduction
 
